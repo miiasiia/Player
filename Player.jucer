@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="FTtjut" name="Player" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
-              pluginFormats="buildVST3" cppLanguageStandard="20">
+              pluginFormats="buildStandalone,buildVST3" cppLanguageStandard="20">
   <MAINGROUP id="Y8EfBL" name="Player">
     <GROUP id="{DB49BA6A-8C55-9F0F-E166-DBEE208EEC16}" name="Source">
       <FILE id="b2T0XO" name="PluginProcessor.cpp" compile="1" resource="0"

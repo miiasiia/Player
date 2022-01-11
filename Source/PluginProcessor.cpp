@@ -12,16 +12,18 @@
 //==============================================================================
 PlayerAudioProcessor::PlayerAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+    )
 #endif
 {
+    formatManager.registerBasicFormats();
+    transportSource.addChangeListener(this);
 }
 
 PlayerAudioProcessor::~PlayerAudioProcessor()
@@ -95,12 +97,14 @@ void PlayerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    transportSource.prepareToPlay(samplesPerBlock, sampleRate);
 }
 
 void PlayerAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+    transportSource.releaseResources();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -131,6 +135,8 @@ bool PlayerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 void PlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    transportSource.getNextAudioBlock(juce::AudioSourceChannelInfo(buffer));
+    
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -155,7 +161,7 @@ void PlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
         auto* channelData = buffer.getWritePointer (channel);
 
         // ..do something to the data...
-    }
+    }               
 }
 
 //==============================================================================
@@ -181,6 +187,54 @@ void PlayerAudioProcessor::setStateInformation (const void* data, int sizeInByte
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+//==============================================================================
+
+void PlayerAudioProcessor::changeState(TransportState newState)
+{
+    if (state != newState)
+    {
+        state = newState;
+
+        switch (state)
+        {
+        case Stopped:
+            transportSource.setPosition(0.0);
+            break;
+
+        case Starting:             
+            transportSource.start();
+            break;
+
+        case Pausing:
+            transportSource.stop();
+            break;
+
+        case Paused:
+            break;
+
+        case Playing:                  
+            break;        
+        
+        case Stopping:
+            transportSource.stop();
+            break;
+        }
+    }
+}
+
+void PlayerAudioProcessor::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (source == &transportSource)
+    {
+        if (transportSource.isPlaying())
+            changeState(Playing);
+        else if ((state == Stopping) || (state == Playing))
+            changeState(Stopped);
+        else if (Pausing == state)
+            changeState(Paused);
+    }
 }
 
 //==============================================================================

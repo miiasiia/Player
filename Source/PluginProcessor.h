@@ -13,7 +13,7 @@
 //==============================================================================
 /**
 */
-class PlayerAudioProcessor  : public juce::AudioProcessor
+class PlayerAudioProcessor  : public juce::AudioProcessor, public juce::ChangeListener
 {
 public:
     //==============================================================================
@@ -21,10 +21,10 @@ public:
     ~PlayerAudioProcessor() override;
 
     //==============================================================================
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay (double sampleRate, int samplesPerBlock) override;    
     void releaseResources() override;
 
-   #ifndef JucePlugin_PreferredChannelConfigurations
+   #ifndef JucePlugin_PrefesrredChannelConfigurations
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
    #endif
 
@@ -52,8 +52,26 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    //==============================================================================
+    
+    enum TransportState
+    {
+        Stopped,
+        Starting,
+        Playing,
+        Pausing,
+        Paused,
+        Stopping
+    };
+    TransportState state;
+    juce::AudioFormatManager formatManager;
+    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
+    juce::AudioTransportSource transportSource;
+    
+    void changeState(TransportState newstate);
+    void changeListenerCallback(juce::ChangeBroadcaster* source);
 
 private:
-    //==============================================================================
+    //==============================================================================      
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PlayerAudioProcessor)
 };
