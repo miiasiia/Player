@@ -63,8 +63,8 @@ void PlayerAudioProcessorEditor::resized()
 void PlayerAudioProcessorEditor::openButtonClicked()
 {
     chooser = std::make_unique<juce::FileChooser>("Select a Wave file to play...", juce::File{}, "*.wav");
-    auto chooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
-
+    auto chooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;  
+    
     chooser->launchAsync(chooserFlags, [this](const juce::FileChooser& fc)
         {
             auto file = fc.getResult();
@@ -77,7 +77,9 @@ void PlayerAudioProcessorEditor::openButtonClicked()
                 {
                     auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
                     audioProcessor.transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
+                    audioProcessor.changeState(PlayerAudioProcessor::TransportState::Stopping);
                     playButton.setEnabled(true);
+                    playButton.setButtonText("Play");                     
                     audioProcessor.readerSource.reset(newSource.release());
                 }
             }

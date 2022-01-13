@@ -36,7 +36,6 @@ private:
     void openButtonClicked();
     void playButtonClicked();
     void stopButtonClicked();
-    void changeText();
 
     std::unique_ptr<juce::FileChooser> chooser;
 

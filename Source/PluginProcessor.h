@@ -54,7 +54,7 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     //==============================================================================
     
-    enum TransportState
+    enum class TransportState
     {
         Stopped,
         Starting,

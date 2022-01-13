@@ -12,7 +12,7 @@
 //==============================================================================
 PlayerAudioProcessor::PlayerAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-    : AudioProcessor(BusesProperties()
+    : state(TransportState::Stopped), AudioProcessor(BusesProperties()
 #if ! JucePlugin_IsMidiEffect
 #if ! JucePlugin_IsSynth
         .withInput("Input", juce::AudioChannelSet::stereo(), true)
@@ -25,6 +25,7 @@ PlayerAudioProcessor::PlayerAudioProcessor()
     formatManager.registerBasicFormats();
     transportSource.addChangeListener(this);
 }
+    
 
 PlayerAudioProcessor::~PlayerAudioProcessor()
 {
@@ -199,25 +200,25 @@ void PlayerAudioProcessor::changeState(TransportState newState)
 
         switch (state)
         {
-        case Stopped:
+        case TransportState::Stopped:
             transportSource.setPosition(0.0);
             break;
 
-        case Starting:             
+        case TransportState::Starting:
             transportSource.start();
             break;
 
-        case Pausing:
+        case TransportState::Pausing:
             transportSource.stop();
             break;
 
-        case Paused:
+        case TransportState::Paused:
             break;
 
-        case Playing:                  
+        case TransportState::Playing:
             break;        
         
-        case Stopping:
+        case TransportState::Stopping:
             transportSource.stop();
             break;
         }
@@ -229,11 +230,11 @@ void PlayerAudioProcessor::changeListenerCallback(juce::ChangeBroadcaster* sourc
     if (source == &transportSource)
     {
         if (transportSource.isPlaying())
-            changeState(Playing);
-        else if ((state == Stopping) || (state == Playing))
-            changeState(Stopped);
-        else if (Pausing == state)
-            changeState(Paused);
+            changeState(TransportState::Playing);
+        else if ((state == TransportState::Stopping) || (state == TransportState::Playing))
+            changeState(TransportState::Stopped);
+        else if (TransportState::Pausing == state)
+            changeState(TransportState::Paused);
     }
 }
 
