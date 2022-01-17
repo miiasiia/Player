@@ -10,72 +10,71 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-PlayerAudioProcessor::PlayerAudioProcessor()
+PlayerAudioProcessor::PlayerAudioProcessor ()
 #ifndef JucePlugin_PreferredChannelConfigurations
-    : state(TransportState::Stopped), AudioProcessor(BusesProperties()
+    : AudioProcessor (BusesProperties ()
 #if ! JucePlugin_IsMidiEffect
 #if ! JucePlugin_IsSynth
-        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+                                                       .withInput ("Input", juce::AudioChannelSet::stereo (), true)
 #endif
-        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+                                                       .withOutput ("Output", juce::AudioChannelSet::stereo (), true)
 #endif
     )
 #endif
 {
-    formatManager.registerBasicFormats();
-    transportSource.addChangeListener(this);
+    formatManager.registerBasicFormats ();
 }
-    
 
-PlayerAudioProcessor::~PlayerAudioProcessor()
+
+PlayerAudioProcessor::~PlayerAudioProcessor ()
 {
 }
 
 //==============================================================================
-const juce::String PlayerAudioProcessor::getName() const
+const juce::String PlayerAudioProcessor::getName () const
 {
     return JucePlugin_Name;
 }
 
-bool PlayerAudioProcessor::acceptsMidi() const
+bool PlayerAudioProcessor::acceptsMidi () const
 {
-   #if JucePlugin_WantsMidiInput
+#if JucePlugin_WantsMidiInput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
-bool PlayerAudioProcessor::producesMidi() const
+bool PlayerAudioProcessor::producesMidi () const
 {
-   #if JucePlugin_ProducesMidiOutput
+#if JucePlugin_ProducesMidiOutput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
-bool PlayerAudioProcessor::isMidiEffect() const
+bool PlayerAudioProcessor::isMidiEffect () const
 {
-   #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
-double PlayerAudioProcessor::getTailLengthSeconds() const
+double PlayerAudioProcessor::getTailLengthSeconds () const
 {
     return 0.0;
 }
 
-int PlayerAudioProcessor::getNumPrograms()
+int PlayerAudioProcessor::getNumPrograms ()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int PlayerAudioProcessor::getCurrentProgram()
+int PlayerAudioProcessor::getCurrentProgram ()
 {
     return 0;
 }
@@ -98,49 +97,49 @@ void PlayerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    transportSource.prepareToPlay(samplesPerBlock, sampleRate);
+    transportSource.prepareToPlay (samplesPerBlock, sampleRate);
 }
 
-void PlayerAudioProcessor::releaseResources()
+void PlayerAudioProcessor::releaseResources ()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    transportSource.releaseResources();
+    transportSource.releaseResources ();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool PlayerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-  #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
     return true;
-  #else
+#else
     // This is the place where you check if the layout is supported.
     // In this template code we only support mono or stereo.
     // Some plugin hosts, such as certain GarageBand versions, will only
     // load plugins that support stereo bus layouts.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+    if (layouts.getMainOutputChannelSet () != juce::AudioChannelSet::mono ()
+        && layouts.getMainOutputChannelSet () != juce::AudioChannelSet::stereo ())
         return false;
 
     // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+#if ! JucePlugin_IsSynth
+    if (layouts.getMainOutputChannelSet () != layouts.getMainInputChannelSet ())
         return false;
-   #endif
+#endif
 
     return true;
-  #endif
+#endif
 }
 #endif
 
 void PlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    transportSource.getNextAudioBlock(juce::AudioSourceChannelInfo(buffer));
-    
+    transportSource.getNextAudioBlock (juce::AudioSourceChannelInfo (buffer));
+
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels ();
+    auto totalNumOutputChannels = getTotalNumOutputChannels ();
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -149,7 +148,7 @@ void PlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear (i, 0, buffer.getNumSamples ());
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
@@ -162,16 +161,16 @@ void PlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
         auto* channelData = buffer.getWritePointer (channel);
 
         // ..do something to the data...
-    }               
+    }
 }
 
 //==============================================================================
-bool PlayerAudioProcessor::hasEditor() const
+bool PlayerAudioProcessor::hasEditor () const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* PlayerAudioProcessor::createEditor()
+juce::AudioProcessorEditor* PlayerAudioProcessor::createEditor ()
 {
     return new PlayerAudioProcessorEditor (*this);
 }
@@ -191,56 +190,8 @@ void PlayerAudioProcessor::setStateInformation (const void* data, int sizeInByte
 }
 
 //==============================================================================
-
-void PlayerAudioProcessor::changeState(TransportState newState)
-{
-    if (state != newState)
-    {
-        state = newState;
-
-        switch (state)
-        {
-        case TransportState::Stopped:
-            transportSource.setPosition(0.0);
-            break;
-
-        case TransportState::Starting:
-            transportSource.start();
-            break;
-
-        case TransportState::Pausing:
-            transportSource.stop();
-            break;
-
-        case TransportState::Paused:
-            break;
-
-        case TransportState::Playing:
-            break;        
-        
-        case TransportState::Stopping:
-            transportSource.stop();
-            break;
-        }
-    }
-}
-
-void PlayerAudioProcessor::changeListenerCallback(juce::ChangeBroadcaster* source)
-{
-    if (source == &transportSource)
-    {
-        if (transportSource.isPlaying())
-            changeState(TransportState::Playing);
-        else if ((state == TransportState::Stopping) || (state == TransportState::Playing))
-            changeState(TransportState::Stopped);
-        else if (TransportState::Pausing == state)
-            changeState(TransportState::Paused);
-    }
-}
-
-//==============================================================================
 // This creates new instances of the plugin..
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter ()
 {
-    return new PlayerAudioProcessor();
+    return new PlayerAudioProcessor ();
 }

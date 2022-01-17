@@ -14,28 +14,42 @@
 //==============================================================================
 /**
 */
-class PlayerAudioProcessorEditor  : public juce::AudioProcessorEditor
+class PlayerAudioProcessorEditor : public juce::AudioProcessorEditor, public juce::ChangeListener
 {
 public:
     PlayerAudioProcessorEditor (PlayerAudioProcessor&);
-    ~PlayerAudioProcessorEditor() override;
+    ~PlayerAudioProcessorEditor () override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
-    void resized() override;    
+    void resized () override;
 
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    PlayerAudioProcessor& audioProcessor; 
+    PlayerAudioProcessor& audioProcessor;
 
     juce::TextButton openButton;
     juce::TextButton playButton;
     juce::TextButton stopButton;
 
-    void openButtonClicked();
-    void playButtonClicked();
-    void stopButtonClicked();
+    void openButtonClicked ();
+    void playButtonClicked ();
+    void stopButtonClicked ();
+
+    enum class TransportState
+    {
+        Stopped,
+        Starting,
+        Playing,
+        Pausing,
+        Paused,
+        Stopping
+    };
+    TransportState state;
+
+    void changeState (TransportState newstate);
+    void changeListenerCallback (juce::ChangeBroadcaster* source);      
 
     std::unique_ptr<juce::FileChooser> chooser;
 
